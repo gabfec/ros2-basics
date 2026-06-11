@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(topics_quiz)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -std=c++20)
 endif()
 
 # find dependencies
@@ -12,6 +12,31 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+
+# Add executable
+add_executable(topics_quiz_executable src/topics_quiz.cpp)
+ament_target_dependencies(topics_quiz_executable
+  rclcpp
+  std_msgs
+  sensor_msgs
+  nav_msgs
+  geometry_msgs
+  tf2
+)
+
+# Install executables
+install(TARGETS
+  topics_quiz_executable
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install launch files
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

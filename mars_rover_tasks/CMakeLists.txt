@@ -63,12 +63,21 @@ ament_target_dependencies(autonomous_exploration_executable
   tf2_geometry_msgs
 )
 
+add_executable(text_recog_executable src/text_recog_node.cpp)
+ament_target_dependencies(text_recog_executable
+  rclcpp
+  sensor_msgs
+  cv_bridge
+  OpenCV
+)
+
 # Install executables
 install(TARGETS
   subscriber_obstacle_detector_executable
   publish_mars_rover_move_executable
   image_plant_detector_executable
   autonomous_exploration_executable
+  text_recog_executable
   DESTINATION lib/${PROJECT_NAME}
 )
 

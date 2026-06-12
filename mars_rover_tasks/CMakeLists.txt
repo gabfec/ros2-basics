@@ -87,6 +87,22 @@ ament_target_dependencies(text_recog_s_client_executable
   std_srvs
 )
 
+add_executable(text_recog_s_server_custom_executable src/text_recog_s_server_custom.cpp)
+ament_target_dependencies(text_recog_s_server_custom_executable
+  rclcpp
+  sensor_msgs
+  cv_bridge
+  OpenCV
+  custom_interfaces
+)
+
+add_executable(text_recog_s_client_custom_executable src/text_recog_s_client_custom.cpp)
+ament_target_dependencies(text_recog_s_client_custom_executable
+  rclcpp
+  custom_interfaces
+)
+
+
 # Install executables
 install(TARGETS
   subscriber_obstacle_detector_executable
@@ -96,6 +112,8 @@ install(TARGETS
   text_recog_executable
   text_recog_s_server_executable
   text_recog_s_client_executable
+  text_recog_s_server_custom_executable
+  text_recog_s_client_custom_executable
   DESTINATION lib/${PROJECT_NAME}
 )
 

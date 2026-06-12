@@ -26,7 +26,8 @@ endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RoverEvents.msg"
-   DEPENDENCIES std_msgs geometry_msgs
+  "srv/TextRecognition.srv"
+  DEPENDENCIES std_msgs geometry_msgs
 )
 
 ament_package()

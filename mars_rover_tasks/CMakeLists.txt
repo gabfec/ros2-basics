@@ -17,6 +17,7 @@ find_package(OpenCV REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(custom_interfaces REQUIRED)
+find_package(std_srvs REQUIRED)
 
 
 # Include directories
@@ -71,6 +72,21 @@ ament_target_dependencies(text_recog_executable
   OpenCV
 )
 
+add_executable(text_recog_s_server_executable src/text_recog_s_server.cpp)
+ament_target_dependencies(text_recog_s_server_executable
+  rclcpp
+  sensor_msgs
+  cv_bridge
+  OpenCV
+  std_srvs
+)
+
+add_executable(text_recog_s_client_executable src/text_recog_s_client.cpp)
+ament_target_dependencies(text_recog_s_client_executable
+  rclcpp
+  std_srvs
+)
+
 # Install executables
 install(TARGETS
   subscriber_obstacle_detector_executable
@@ -78,6 +94,8 @@ install(TARGETS
   image_plant_detector_executable
   autonomous_exploration_executable
   text_recog_executable
+  text_recog_s_server_executable
+  text_recog_s_client_executable
   DESTINATION lib/${PROJECT_NAME}
 )
 

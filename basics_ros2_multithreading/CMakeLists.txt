@@ -1,0 +1,58 @@
+cmake_minimum_required(VERSION 3.8)
+project(basics_ros2_multithreading)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED)
+
+# Create executables
+add_executable(function src/function.cpp)
+ament_target_dependencies(function rclcpp)
+
+add_executable(callback_function src/callback_function.cpp)
+ament_target_dependencies(callback_function rclcpp)
+
+add_executable(callback_spinonce_function src/callback_spinonce_function.cpp)
+ament_target_dependencies(callback_spinonce_function rclcpp)
+
+add_executable(plant_detector src/plant_detector.cpp)
+ament_target_dependencies(plant_detector 
+  rclcpp 
+  sensor_msgs 
+  geometry_msgs 
+  std_srvs 
+  cv_bridge 
+  OpenCV
+)
+
+# Install executables
+install(TARGETS
+  function
+  callback_function
+  callback_spinonce_function
+  plant_detector
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()

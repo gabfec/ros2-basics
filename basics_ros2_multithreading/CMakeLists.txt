@@ -46,6 +46,17 @@ ament_target_dependencies(plant_detector_multithreading
   OpenCV
 )
 
+add_executable(plant_detector_multithreading_callbackgroups src/plant_detector_multithreading_callbackgroups.cpp)
+ament_target_dependencies(plant_detector_multithreading_callbackgroups
+  rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  std_srvs
+  cv_bridge
+  OpenCV
+)
+
 
 # Install executables
 install(TARGETS
@@ -54,7 +65,14 @@ install(TARGETS
   callback_spinonce_function
   plant_detector_basic
   plant_detector_multithreading
+  plant_detector_multithreading_callbackgroups
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install launch files
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

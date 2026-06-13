@@ -24,22 +24,36 @@ ament_target_dependencies(callback_function rclcpp)
 add_executable(callback_spinonce_function src/callback_spinonce_function.cpp)
 ament_target_dependencies(callback_spinonce_function rclcpp)
 
-add_executable(plant_detector src/plant_detector.cpp)
-ament_target_dependencies(plant_detector 
-  rclcpp 
-  sensor_msgs 
-  geometry_msgs 
-  std_srvs 
-  cv_bridge 
+add_executable(plant_detector_basic src/plant_detector.cpp)
+ament_target_dependencies(plant_detector_basic
+  rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  std_srvs
+  cv_bridge
   OpenCV
 )
+
+add_executable(plant_detector_multithreading src/plant_detector_multithreading.cpp)
+ament_target_dependencies(plant_detector_multithreading
+  rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  std_srvs
+  cv_bridge
+  OpenCV
+)
+
 
 # Install executables
 install(TARGETS
   function
   callback_function
   callback_spinonce_function
-  plant_detector
+  plant_detector_basic
+  plant_detector_multithreading
   DESTINATION lib/${PROJECT_NAME}
 )
 

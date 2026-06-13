@@ -1,16 +1,16 @@
+#include "cv_bridge/cv_bridge.h"
+#include "geometry_msgs/msg/twist.hpp"
+#include "opencv2/opencv.hpp"
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/executors/multi_threaded_executor.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/image.hpp"
+#include "std_srvs/srv/trigger.hpp"
 #include <chrono>
-#include <cv_bridge/cv_bridge.h>
 #include <filesystem>
 #include <fstream>
-#include <geometry_msgs/msg/twist.hpp>
 #include <iomanip>
 #include <memory>
-#include <opencv2/opencv.hpp>
-#include <rclcpp/callback_group.hpp>
-#include <rclcpp/executors/multi_threaded_executor.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/image.hpp>
-#include <std_srvs/srv/trigger.hpp>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -27,24 +27,28 @@ public:
         "/home/simulations/ros2_sims_ws/src/cpp_callback_visual_scripts/";
 
     // Open timing log files with full path
-    listener_callback_log_.open(output_dir_ +
-                                "reentrant_listener_callback_timings.csv");
+    listener_callback_log_.open(
+        output_dir_ + "mutuallyexclusive_listener_callback_timings.csv");
     detect_plants_callback_log_.open(
-        output_dir_ + "reentrant_detect_plants_callback_timings.csv");
+        output_dir_ + "mutuallyexclusive_detect_plants_callback_timings.csv");
 
     // Write CSV headers
     listener_callback_log_ << "timestamp,duration_ms,callback_type\n";
     detect_plants_callback_log_ << "timestamp,duration_ms,callback_type\n";
 
-    // Create a reentrant callback group
-    reentrant_group_1_ =
-        this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    // Create two mutually exclusive callback groups
+    mutuallyexclusive_group_1_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+    mutuallyexclusive_group_2_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    // Set up subscription options to use the reentrant callback group
+    // Set up subscription options to use the first mutually exclusive callback
+    // group
     rclcpp::SubscriptionOptions sub_options;
-    sub_options.callback_group = reentrant_group_1_;
+    sub_options.callback_group = mutuallyexclusive_group_1_;
 
-    // Create subscription for camera images with reentrant callback group
+    // Create subscription for camera images with first mutually exclusive
+    // callback group
     subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
         image_topic_name_, 10,
         std::bind(&PlantDetectorNode::listener_callback_wrapper, this, _1),
@@ -54,21 +58,23 @@ public:
     cmd_vel_publisher_ =
         this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
 
-    // Create service for plant detection with reentrant callback group
+    // Create service for plant detection with second mutually exclusive
+    // callback group
     service_ = this->create_service<std_srvs::srv::Trigger>(
         "detect_plants",
         std::bind(&PlantDetectorNode::detect_plants_callback_wrapper, this, _1,
                   _2),
-        rmw_qos_profile_services_default, reentrant_group_1_);
+        rmw_qos_profile_services_default, mutuallyexclusive_group_2_);
 
-    RCLCPP_INFO(this->get_logger(),
-                "Plant Detector Node initialized with ReentrantCallbackGroup");
+    RCLCPP_INFO(
+        this->get_logger(),
+        "Plant Detector Node initialized with MutuallyExclusiveCallbackGroups");
     RCLCPP_INFO(this->get_logger(), "Callback timing instrumentation enabled");
     RCLCPP_INFO(this->get_logger(), "CSV logs will be saved to: %s",
                 output_dir_.c_str());
     RCLCPP_INFO(this->get_logger(),
-                "Files: reentrant_listener_callback_timings.csv, "
-                "reentrant_detect_plants_callback_timings.csv");
+                "Files: mutuallyexclusive_listener_callback_timings.csv, "
+                "mutuallyexclusive_detect_plants_callback_timings.csv");
   }
 
   ~PlantDetectorNode() {
@@ -101,7 +107,7 @@ private:
 
     // Log timing data
     listener_callback_log_ << timestamp << "," << duration
-                           << ",reentrant_listener_callback\n";
+                           << ",mutuallyexclusive_listener_callback\n";
     listener_callback_log_.flush();
 
     // Store for analysis
@@ -127,8 +133,9 @@ private:
                     1000.0; // Convert to milliseconds
 
     // Log timing data
-    detect_plants_callback_log_ << timestamp << "," << duration
-                                << ",reentrant_detect_plants_callback\n";
+    detect_plants_callback_log_
+        << timestamp << "," << duration
+        << ",mutuallyexclusive_detect_plants_callback\n";
     detect_plants_callback_log_.flush();
 
     // Store for analysis
@@ -217,7 +224,7 @@ private:
 
   void generate_timing_summary() {
     RCLCPP_INFO(this->get_logger(),
-                "=== REENTRANT CALLBACK TIMING SUMMARY ===");
+                "=== MUTUALLY EXCLUSIVE CALLBACK TIMING SUMMARY ===");
 
     if (!listener_callback_timings_.empty()) {
       double avg_listener = 0,
@@ -231,7 +238,7 @@ private:
       avg_listener /= listener_callback_timings_.size();
 
       RCLCPP_INFO(this->get_logger(),
-                  "reentrant_listener_callback: %zu calls, avg=%.2fms, "
+                  "mutuallyexclusive_listener_callback: %zu calls, avg=%.2fms, "
                   "min=%.2fms, max=%.2fms",
                   listener_callback_timings_.size(), avg_listener, min_listener,
                   max_listener);
@@ -249,8 +256,8 @@ private:
       avg_detect /= detect_plants_callback_timings_.size();
 
       RCLCPP_INFO(this->get_logger(),
-                  "reentrant_detect_plants_callback: %zu calls, avg=%.2fms, "
-                  "min=%.2fms, "
+                  "mutuallyexclusive_detect_plants_callback: %zu calls, "
+                  "avg=%.2fms, min=%.2fms, "
                   "max=%.2fms",
                   detect_plants_callback_timings_.size(), avg_detect,
                   min_detect, max_detect);
@@ -259,13 +266,14 @@ private:
     RCLCPP_INFO(this->get_logger(), "CSV files saved to: %s",
                 output_dir_.c_str());
     RCLCPP_INFO(this->get_logger(),
-                "Files: reentrant_listener_callback_timings.csv, "
-                "reentrant_detect_plants_callback_timings.csv");
+                "Files: mutuallyexclusive_listener_callback_timings.csv, "
+                "mutuallyexclusive_detect_plants_callback_timings.csv");
   }
 
   std::string image_topic_name_;
   std::string output_dir_;
-  rclcpp::CallbackGroup::SharedPtr reentrant_group_1_;
+  rclcpp::CallbackGroup::SharedPtr mutuallyexclusive_group_1_;
+  rclcpp::CallbackGroup::SharedPtr mutuallyexclusive_group_2_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_publisher_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service_;

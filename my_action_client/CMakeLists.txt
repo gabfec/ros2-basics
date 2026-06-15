@@ -10,12 +10,23 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(leo_description REQUIRED)
+find_package(custom_interfaces REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(gazebo_msgs REQUIRED)
 
 add_executable(example62 src/action_client.cpp)
 ament_target_dependencies(example62
   "rclcpp"
   "rclcpp_action"
   "leo_description")
+
+add_executable(example65 src/custom_action_client.cpp)
+ament_target_dependencies(example65
+  "rclcpp"
+  "rclcpp_action"
+  "custom_interfaces"
+  "nav_msgs"
+  "gazebo_msgs")
 
 install(TARGETS example62
   DESTINATION lib/${PROJECT_NAME})

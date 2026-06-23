@@ -11,6 +11,10 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(composition REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(custom_interfaces REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED)
 
 include_directories(include)
 
@@ -23,15 +27,37 @@ ament_target_dependencies(robot_status_component
   
 rclcpp_components_register_nodes(robot_status_component "rover_components::RobotStatusService")
 
+# Add the text recognition component library
+add_library(text_recognition_component SHARED src/text_recognition_component.cpp)
+target_compile_definitions(text_recognition_component PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(text_recognition_component
+  "rclcpp"
+  "rclcpp_components"
+  "custom_interfaces"
+  "sensor_msgs"
+  "cv_bridge"
+  "OpenCV")
+
+# Register the text recognition component
+rclcpp_components_register_nodes(text_recognition_component "rover_components::TextRecognitionService")
+
 install(TARGETS
   robot_status_component
+  text_recognition_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
 # Install headers if you have any
 install(DIRECTORY include/
-  DESTINATION include/)
+  DESTINATION include/
+)
+
+# Install launch files.
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

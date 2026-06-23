@@ -41,12 +41,25 @@ ament_target_dependencies(text_recognition_component
 # Register the text recognition component
 rclcpp_components_register_nodes(text_recognition_component "rover_components::TextRecognitionService")
 
+add_executable(autonomous_mission src/autonomous_mission.cpp)
+target_link_libraries(autonomous_mission
+  robot_status_component
+  text_recognition_component
+)
+ament_target_dependencies(autonomous_mission "rclcpp")
+
 install(TARGETS
   robot_status_component
   text_recognition_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS
+  autonomous_mission
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install headers if you have any
 install(DIRECTORY include/

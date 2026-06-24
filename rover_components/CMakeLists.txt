@@ -33,7 +33,7 @@ target_compile_definitions(text_recognition_component PRIVATE "COMPOSITION_BUILD
 ament_target_dependencies(text_recognition_component
   "rclcpp"
   "rclcpp_components"
-  "custom_interfaces"
+  "std_srvs"
   "sensor_msgs"
   "cv_bridge"
   "OpenCV")
